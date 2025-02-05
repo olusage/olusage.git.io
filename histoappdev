@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Babcock University Teaching Hospital - Patient Registration</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+  }
+  .header {
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+  }
+  .container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  h1, h2 {
+    text-align: center;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+  label {
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  input, textarea, select, button {
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  button {
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #34495e;
+  }
+  .logo {
+    display: block;
+    margin: 20px auto;
+    max-width: 150px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="https://buth.babcock.edu.ng/wp-content/uploads/2023/04/BUTH_logo2.png" alt="Babcock University Teaching Hospital Logo" class="logo">
+  <h1>Babcock University Teaching Hospital</h1>
+  <h2>Department of Anatomic Pathology</h2>
+</div>
+
+<div class="container">
+  <h1>Patient Registration</h1>
+  <form id="registrationForm">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="hospitalNumber">Hospital Number:</label>
+    <input type="text" id="hospitalNumber" name="hospitalNumber" required>
+
+    <label for="sex">Sex:</label>
+    <select id="sex" name="sex" required>
+      <option value="">--Select--</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+
+    <label for="age">Age:</label>
+    <input type="number" id="age" name="age" required>
+
+    <label for="sample">Sample:</label>
+    <input type="text" id="sample" name="sample" required>
+
+    <label for="requestingDoctor">Requesting Doctor:</label>
+    <input type="text" id="requestingDoctor" name="requestingDoctor" required>
+
+    <label for="clinicalDetails">Clinical Details:</label>
+    <textarea id="clinicalDetails" name="clinicalDetails" rows="3" required></textarea>
+
+    <label for="workingDiagnosis">Working Diagnosis:</label>
+    <input type="text" id="workingDiagnosis" name="workingDiagnosis" required>
+
+    <label for="labNumber">Laboratory Number:</label>
+    <input type="text" id="labNumber" name="labNumber" required>
+
+    <label for="phoneNumber">Phone Number:</label>
+    <input type="tel" id="phoneNumber" name="phoneNumber" required>
+
+    <label for="email">Email Address:</label>
+    <input type="email" id="email" name="email" required>
+
+    <!-- Date Received Field (Read-only) -->
+    <label for="dateReceived">Date Received:</label>
+    <input type="text" id="dateReceived" name="dateReceived" readonly value="" />
+
+    <button type="submit">Save to Google Sheet</button>
+  </form>
+
+  <h1>Search Patient Details</h1>
+  <form id="searchForm">
+    <label for="search">Search by Name or Laboratory Number:</label>
+    <input type="text" id="search" name="search" required>
+    <button type="submit">Search</button>
+  </form>
+
+  <div id="resultSection" style="display: none;">
+    <h2>Result Generation</h2>
+    <form id="resultForm">
+      <label for="macroscopy">Macroscopy:</label>
+      <textarea id="macroscopy" name="macroscopy" rows="3"></textarea>
+
+      <label for="microscopy">Microscopy:</label>
+      <textarea id="microscopy" name="microscopy" rows="3"></textarea>
+
+      <label for="diagnosis">Diagnosis:</label>
+      <input type="text" id="diagnosis" name="diagnosis">
+
+      <label for="reportingDoctor">Reporting Doctor's Name:</label>
+      <input type="text" id="reportingDoctor" name="reportingDoctor">
+
+      <!-- Date Reported Field -->
+      <label for="dateReported">Date Reported:</label>
+      <input type="date" id="dateReported" name="dateReported" required>
+
+      <button type="button" onclick="saveResult()">Save Result</button>
+      <button type="button" onclick="printResult()">Print Result</button>
+      <button type="button" onclick="sendToWhatsApp()">Send to WhatsApp</button>
+      <button type="button" onclick="sendByEmail()">Send by Email</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbyWxuzP0WWRcCUvrlosxQRFcaJhGBHhsFsRGq6ZODw0ZehvZgYo-2yvluHsSR-vt7c/exec';
+
+  const registrationForm = document.getElementById('registrationForm');
+  const searchForm = document.getElementById('searchForm');
+  const resultSection = document.getElementById('resultSection');
+
+  // Automatically populate the Date Received field
+  document.getElementById('dateReceived').value = new Date().toISOString().split('T')[0];
+
+  // Save patient registration data
+  registrationForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(registrationForm);
+
+  try {
+    // Log the request payload for debugging
+    console.log('Sending data:', Object.fromEntries(formData));
+
+    const response = await fetch(googleSheetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.fromEntries(formData))
+    });
+
+    if (response.ok) {
+      alert('Data saved successfully!');
+      registrationForm.reset();
+      document.getElementById('dateReceived').value = new Date().toISOString().split('T')[0]; // Reset Date Received
+    } else {
+      const errorMessage = await response.text(); // Get the error message from the backend
+      console.error('Backend error:', errorMessage);
+      alert(`Failed to save data. Error: ${errorMessage}`);
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+    alert('An error occurred while saving data.');
+  }
+});
+
+  // Search for patient details
+  searchForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const searchQuery = document.getElementById('search').value;
+    try {
+      const response = await fetch(`${googleSheetUrl}?search=${encodeURIComponent(searchQuery)}`);
+      if (response.ok) {
+        const patientData = await response.json();
+        if (patientData && Object.keys(patientData).length > 0) {
+          populateResultForm(patientData);
+          resultSection.style.display = 'block';
+        } else {
+          alert('No patient found with the given details.');
+        }
+      } else {
+        alert('Failed to fetch patient data.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while fetching data.');
+    }
+  });
+
+  function populateResultForm(data) {
+    document.getElementById('macroscopy').value = data.macroscopy || '';
+    document.getElementById('microscopy').value = data.microscopy || '';
+    document.getElementById('diagnosis').value = data.diagnosis || '';
+    document.getElementById('reportingDoctor').value = data.reportingDoctor || '';
+    document.getElementById('dateReported').value = ''; // Clear date field
+  }
+
+  // Save result data
+  async function saveResult() {
+    const formData = new FormData(document.getElementById('resultForm'));
+    try {
+      const response = await fetch(googleSheetUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(formData))
+      });
+      if (response.ok) {
+        alert('Result saved successfully!');
+      } else {
+        alert('Failed to save result.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while saving result.');
+    }
+  }
+
+  // Print result
+  function printResult() {
+    window.print();
+  }
+
+  // Send result to WhatsApp
+  function sendToWhatsApp() {
+    const phoneNumber = document.getElementById('phoneNumber').value;
+    const message = encodeURIComponent('Your test results are ready. Please contact the hospital for more details.');
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+  }
+
+  // Send result by email
+  function sendByEmail() {
+    const email = document.getElementById('email').value;
+    const subject = encodeURIComponent('Test Results from Babcock University Teaching Hospital');
+    const body = encodeURIComponent('Please find attached your test results.');
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  }
+</script>
+
+</body>
+</html>
